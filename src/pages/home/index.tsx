@@ -1,6 +1,6 @@
 import { useUserStore } from "@/store/user.store";
 
-export default function HomePage() {
+const HomePage = () => {
   const { user, logout } = useUserStore();
 
   return (
@@ -18,4 +18,6 @@ export default function HomePage() {
       </div>
     </div>
   );
-}
+};
+
+export default HomePage;

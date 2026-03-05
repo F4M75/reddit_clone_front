@@ -1,4 +1,5 @@
-import { login } from "@/api/user.api";
+import { login, signup } from "@/api/user.api";
+import type { TSignupSchema } from "@/modules/user/zod-schemas/signup-user.schema";
 import type { IUser } from "@/typeDef/user";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -8,6 +9,7 @@ interface UserState {
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  signup: (data: TSignupSchema) => Promise<void>;
   logout: () => void;
 }
 
@@ -30,6 +32,16 @@ export const useUserStore = create<UserState>()(
 
       logout: () => {
         set({ user: null, token: null });
+      },
+
+      signup: async (data: TSignupSchema) => {
+        set({ isLoading: true });
+
+        try {
+          await signup(data);
+        } finally {
+          set({ isLoading: false });
+        }
       },
     }),
     {
