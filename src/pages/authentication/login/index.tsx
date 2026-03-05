@@ -1,18 +1,37 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { useUserStore } from "@/store/user.store";
+import { loginSchema } from "@/modules/user/zod-schemas/login-user.schema";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  const { login, isLoading } = useUserStore();
+  const navigate = useNavigate();
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // TODO: wire up authentication
-    console.log("Login", { email, password });
+    setError(null);
+
+    const result = loginSchema.safeParse({ email, password });
+    if (!result.success) {
+      setError(result.error.issues[0].message);
+      return;
+    }
+
+    try {
+      await login(email, password);
+      navigate("/");
+    } catch {
+      setError("Invalid email or password.");
+    }
   }
 
   return (
@@ -51,6 +70,7 @@ export default function LoginPage() {
                 autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
                 required
               />
             </div>
@@ -63,15 +83,21 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
                 required
               />
             </div>
 
+            {error && (
+              <p className="text-xs text-red-500">{error}</p>
+            )}
+
             <Button
               type="submit"
+              disabled={isLoading}
               className="w-full bg-[#ff4500] hover:bg-[#e03d00] text-white"
             >
-              Log In
+              {isLoading ? "Logging in..." : "Log In"}
             </Button>
           </form>
 
@@ -118,7 +144,11 @@ function RedditIcon({ className }: { className?: string }) {
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <path
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
         fill="#4285F4"
